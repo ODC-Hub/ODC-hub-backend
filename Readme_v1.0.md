@@ -340,11 +340,11 @@ http://localhost:8080
 
 ---
 
-## 16. Git Rules
+## 16. Git & collaboration Rules
 
-✔ `.env` → ignored
-✔ `.env.example` → committed
-✔ Secrets → NEVER pushed
+* `.env` → ignored
+* Secrets → NEVER pushed
+* to collaborate, push changes to your branch then open pull request → NEVER push to main directly !
 
 ---
 
@@ -361,4 +361,4 @@ If you add new modules:
 * Follow existing structure
 * Update this README
 
-🚀 Happy coding
+## Happy coding codezillas🚀
