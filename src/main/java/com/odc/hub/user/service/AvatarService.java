@@ -35,7 +35,7 @@ public class AvatarService {
 
         User user = getCurrentUser();
 
-        // 1️⃣ Validation
+        // Validation
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty file");
         }
@@ -54,14 +54,14 @@ public class AvatarService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image too large (max 2MB)");
         }
 
-        // 2️⃣ Delete old avatar
+        // 2- Delete old avatar
         if (user.getAvatarFileId() != null) {
             gridFsTemplate.delete(
                     Query.query(Criteria.where("_id").is(user.getAvatarFileId()))
             );
         }
 
-        // 3️⃣ Store with metadata
+        // 3- Store with metadata
         DBObject metadata = new BasicDBObject();
         metadata.put("contentType", contentType);
         metadata.put("userId", user.getId());

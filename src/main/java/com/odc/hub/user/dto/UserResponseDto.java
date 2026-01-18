@@ -19,4 +19,5 @@ public class UserResponseDto {
     private String avatarFileId;
     private Instant createdAt;
     private Instant updatedAt;
+
 }

@@ -95,7 +95,7 @@ public class AuthService {
                 user.getLockedUntil().isAfter(Instant.now())) {
 
             throw new ResponseStatusException(
-                    HttpStatus.LOCKED, // 423
+                    HttpStatus.LOCKED,
                     "Account locked. Try again later."
             );
         }
@@ -107,7 +107,6 @@ public class AuthService {
 
         // Password check
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-
             handleFailedLogin(user);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
@@ -121,19 +120,23 @@ public class AuthService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        Cookie accessCookie = new Cookie("access_token", accessToken);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge((int) (jwtService.getAccessExpiration() / 1000));
+        // 🚨 Only touch cookies if HTTP layer exists
+        if (response != null) {
+            Cookie accessCookie = new Cookie("access_token", accessToken);
+            accessCookie.setHttpOnly(true);
+            accessCookie.setPath("/");
+            accessCookie.setMaxAge((int) (jwtService.getAccessExpiration() / 1000));
 
-        Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge((int) (jwtService.getRefreshExpiration() / 1000));
+            Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setPath("/");
+            refreshCookie.setMaxAge((int) (jwtService.getRefreshExpiration() / 1000));
 
-        response.addCookie(accessCookie);
-        response.addCookie(refreshCookie);
+            response.addCookie(accessCookie);
+            response.addCookie(refreshCookie);
+        }
     }
+
     private void handleFailedLogin(User user) {
 
         Instant now = Instant.now();
@@ -297,7 +300,7 @@ public class AuthService {
                 .getAuthentication()
                 .getPrincipal();
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+ if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Current password is incorrect"

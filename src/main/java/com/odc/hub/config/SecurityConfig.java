@@ -44,10 +44,14 @@ public class SecurityConfig {
                                         "/api/auth/activate",
                                         "/api/auth/forgot-password",
                                         "/api/auth/reset-password",
-                                        "/api/auth/refresh"
-                                ).permitAll()
+                                        "/api/auth/refresh",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**"
+                        ).permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "FORMATEUR")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

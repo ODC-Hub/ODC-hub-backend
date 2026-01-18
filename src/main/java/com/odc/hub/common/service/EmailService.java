@@ -3,49 +3,69 @@ package com.odc.hub.common.service;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
+import lombok.extern.slf4j.Slf4j;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final SpringTemplateEngine templateEngine;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
         this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
     }
-
+    @Async
     public void sendActivationEmail(String to, String token) {
+        try {
+            String link = "http://localhost:5173/activate?token=" + token;
 
-        String link = "http://localhost:5173/activate?token=" + token;
+            Context context = new Context();
+            context.setVariable("link", link);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject("Activate your ODC Hub account");
-        message.setText(
-                "Your account has been approved.\n\n" +
-                        "Click the link below to activate your account:\n" +
-                        link +
-                        "\n\nThis link expires in 24 hours."
-        );
+            String html = templateEngine.process("email/activation", context);
 
-        mailSender.send(message);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("Activate your ODC Hub account");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send activation email to {}", to, e);
+        }
     }
 
+
+    @Async
     public void sendPasswordResetEmail(String to, String token) {
+        try {
+            String link = "http://localhost:5173/reset-password/" + token;
 
-        String link = "http://localhost:5173/reset-password/" + token;
+            Context context = new Context();
+            context.setVariable("link", link);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject("Reset your password");
-        message.setText(
-                "Click the link below to reset your password:\n\n" +
-                        link +
-                        "\n\nThis link expires in 15 minutes.\n" +
-                        "If you didn’t request this, ignore this email."
-        );
+            String html = templateEngine.process("email/reset-password", context);
 
-        mailSender.send(message);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("Reset your password");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send password reset email to {}", to, e);
+        }
     }
-
-
 }
