@@ -273,7 +273,7 @@ public class UserService {
 
         return UserMapper.toProfileDto(user);
     }
-    private User getCurrentAuthenticatedUser() {
+    public User getCurrentAuthenticatedUser() {
         Object principal = SecurityContextHolder
                 .getContext()
                 .getAuthentication()

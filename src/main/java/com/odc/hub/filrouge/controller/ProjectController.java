@@ -1,0 +1,35 @@
+package com.odc.hub.filrouge.controller;
+
+import com.odc.hub.filrouge.dto.CreateProjectRequest;
+import com.odc.hub.filrouge.dto.ProjectResponse;
+import com.odc.hub.filrouge.mapper.ProjectMapper;
+import com.odc.hub.filrouge.model.ProjectDocument;
+import com.odc.hub.filrouge.service.ProjectService;
+import com.odc.hub.user.model.User;
+import com.odc.hub.user.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/filrouge/projects")
+@RequiredArgsConstructor
+public class ProjectController {
+
+    private final ProjectService projectService;
+    private final UserService userService;
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public ProjectResponse createProject(
+            @RequestBody CreateProjectRequest request
+    ) {
+        User currentUser = userService.getCurrentAuthenticatedUser();
+
+        ProjectDocument project =
+                projectService.createProject(request, currentUser.getId());
+
+        return ProjectMapper.toResponse(project);
+    }
+}

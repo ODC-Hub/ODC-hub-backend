@@ -78,10 +78,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().startsWith("/api/auth/refresh")
-                || request.getRequestURI().startsWith("/api/auth/login");
-    }
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest request) {
+//        return request.getRequestURI().startsWith("/api/auth/refresh")
+//                || request.getRequestURI().startsWith("/api/auth/login");
+//    }
 
 }

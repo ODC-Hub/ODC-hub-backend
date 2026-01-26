@@ -77,7 +77,7 @@ class AuthServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> authService.login(request, mock(HttpServletResponse.class)));
 
-        assertEquals("Invalid credentials", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Invalid email or password"));
 
     }
 

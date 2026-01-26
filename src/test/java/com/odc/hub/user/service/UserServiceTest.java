@@ -6,34 +6,80 @@ import com.odc.hub.user.model.AccountStatus;
 import com.odc.hub.user.model.Role;
 import com.odc.hub.user.model.User;
 import com.odc.hub.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UserServiceTest {
+class UserServiceTest {
+
+    @AfterEach
+    void cleanup() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
-    void approveUserShouldSetStatusAndToken() {
+    void approveUser_shouldApproveAndSendEmail() {
+        // ===== mocks =====
         UserRepository repo = Mockito.mock(UserRepository.class);
         EmailService emailService = Mockito.mock(EmailService.class);
         AuditService auditService = Mockito.mock(AuditService.class);
 
-        User user = new User();
-        user.setId("1");
-        user.setEmail("u@test.com");
-        user.setStatus(AccountStatus.PENDING);
-        user.setRole(Role.BOOTCAMPER);
-
-        Mockito.when(repo.findById("1")).thenReturn(Optional.of(user));
-
         UserService service = new UserService(repo, emailService, auditService);
 
+        // ===== authenticated admin (actor) =====
+        User admin = new User();
+        admin.setId("admin-id");
+        admin.setEmail("admin@test.com");
+        admin.setRole(Role.ADMIN);
+        admin.setStatus(AccountStatus.ACTIVE);
+
+        Authentication authentication = Mockito.mock(Authentication.class);
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(admin);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        // ===== pending user =====
+        User pendingUser = new User();
+        pendingUser.setId("1");
+        pendingUser.setEmail("user@test.com");
+        pendingUser.setStatus(AccountStatus.PENDING);
+        pendingUser.setRole(Role.BOOTCAMPER);
+
+        Mockito.when(repo.findById("1"))
+                .thenReturn(Optional.of(pendingUser));
+
+        // ===== action =====
         service.approveUser("1");
 
-        assertThat(user.getStatus()).isEqualTo(AccountStatus.APPROVED);
-        assertThat(user.getActivationToken()).isNotNull();
+        // ===== assertions =====
+        assertThat(pendingUser.getStatus()).isEqualTo(AccountStatus.APPROVED);
+        assertThat(pendingUser.getActivationToken()).isNotNull();
+        assertThat(pendingUser.getActivationTokenExpiry()).isNotNull();
+
+        // ===== verifications =====
+        Mockito.verify(repo).save(pendingUser);
+
+        Mockito.verify(auditService).log(
+                Mockito.eq(admin),
+                Mockito.eq(pendingUser),
+                Mockito.eq("APPROVE_USER"),
+                Mockito.eq("PENDING"),
+                Mockito.eq("APPROVED")
+        );
+
+        Mockito.verify(emailService)
+                .sendActivationEmail(
+                        Mockito.eq(pendingUser.getEmail()),
+                        Mockito.eq(pendingUser.getActivationToken())
+                );
     }
 }

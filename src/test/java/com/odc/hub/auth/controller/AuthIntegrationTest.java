@@ -13,19 +13,20 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AuthIntegrationTest {
+class AuthIntegrationTest {
 
-    static MongoDBContainer mongo = new MongoDBContainer("mongo:7");
-
-    static {
-        mongo.start();
-    }
+    @Container
+    static MongoDBContainer mongo =
+            new MongoDBContainer("mongo:7");
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry registry) {
@@ -35,20 +36,16 @@ public class AuthIntegrationTest {
     @Autowired
     MockMvc mockMvc;
 
-    @Autowired
-    UserRepository userRepository;
-
     @Test
     void loginShouldFailForNonExistingUser() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                {
-                  "email": "noone@test.com",
-                  "password": "1234"
-                }
-            """))
+                        {
+                          "email": "noone@test.com",
+                          "password": "1234"
+                        }
+                        """))
                 .andExpect(status().isUnauthorized());
     }
-
 }
