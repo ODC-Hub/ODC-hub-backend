@@ -21,16 +21,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/audit")
 @PreAuthorize("hasRole('ADMIN')")
-@RequiredArgsConstructor
 public class AdminAuditController {
 
     private final AuditLogRepository auditLogRepository;
 
+    public AdminAuditController(AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
+    }
+
     @GetMapping
     public Page<AuditDTO> getAuditLogs(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         return auditLogRepository.findAll(pageable)
@@ -44,8 +46,7 @@ public class AdminAuditController {
             @RequestParam(required = false) Instant from,
             @RequestParam(required = false) Instant to,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<AuditLog> logs;
@@ -62,6 +63,5 @@ public class AdminAuditController {
 
         return logs.map(AuditMapper::toDto);
     }
-
 
 }

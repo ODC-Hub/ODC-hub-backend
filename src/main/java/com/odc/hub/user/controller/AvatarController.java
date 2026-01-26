@@ -21,23 +21,26 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/users/avatar")
-@RequiredArgsConstructor
 public class AvatarController {
     private final AvatarService avatarService;
     private final GridFsTemplate gridFsTemplate;
 
+    public AvatarController(AvatarService avatarService, GridFsTemplate gridFsTemplate) {
+        this.avatarService = avatarService;
+        this.gridFsTemplate = gridFsTemplate;
+    }
+
     @PostMapping("/me")
     public Map<String, String> uploadAvatar(
-            @RequestParam("file") MultipartFile file
-    ) {
+            @RequestParam("file") MultipartFile file) {
         return avatarService.uploadAvatar(file);
     }
+
     @GetMapping("/{fileId}")
     public ResponseEntity<Resource> getAvatarById(@PathVariable ObjectId fileId) {
 
         GridFSFile file = gridFsTemplate.findOne(
-                Query.query(Criteria.where("_id").is(fileId))
-        );
+                Query.query(Criteria.where("_id").is(fileId)));
 
         if (file == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -55,4 +58,3 @@ public class AvatarController {
                 .body(resource);
     }
 }
-

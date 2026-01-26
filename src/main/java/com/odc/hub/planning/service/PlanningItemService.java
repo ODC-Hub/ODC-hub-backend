@@ -12,11 +12,15 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class PlanningItemService {
 
     private final PlanningItemRepository repository;
     private final PlanningItemMapper mapper;
+
+    public PlanningItemService(PlanningItemRepository repository, PlanningItemMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
 
     // ADMIN / FORMATEUR
     public PlanningItemResponse create(PlanningItemRequest request, User creator) {
@@ -52,13 +56,20 @@ public class PlanningItemService {
         }
 
         // Only update fields that are NOT null
-        if (request.title() != null) item.setTitle(request.title());
-        if (request.description() != null) item.setDescription(request.description());
-        if (request.type() != null) item.setType(request.type());
-        if (request.startDate() != null) item.setStartDate(request.startDate());
-        if (request.endDate() != null) item.setEndDate(request.endDate());
-        if (request.userIds() != null) item.setUserIds(request.userIds());
-        if (request.tags() != null) item.setTags(request.tags());
+        if (request.title() != null)
+            item.setTitle(request.title());
+        if (request.description() != null)
+            item.setDescription(request.description());
+        if (request.type() != null)
+            item.setType(request.type());
+        if (request.startDate() != null)
+            item.setStartDate(request.startDate());
+        if (request.endDate() != null)
+            item.setEndDate(request.endDate());
+        if (request.userIds() != null)
+            item.setUserIds(request.userIds());
+        if (request.tags() != null)
+            item.setTags(request.tags());
 
         return mapper.toDto(repository.save(item));
     }
@@ -75,7 +86,5 @@ public class PlanningItemService {
 
         repository.deleteById(id);
     }
-
-
 
 }

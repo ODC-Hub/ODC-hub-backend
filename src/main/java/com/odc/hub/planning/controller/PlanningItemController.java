@@ -13,18 +13,20 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/planning")
-@RequiredArgsConstructor
 public class PlanningItemController {
 
     private final PlanningItemService planningService;
+
+    public PlanningItemController(PlanningItemService planningService) {
+        this.planningService = planningService;
+    }
 
     // Only ADMIN or FORMATEUR can create
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR')")
     public PlanningItemResponse create(
             @RequestBody PlanningItemRequest request,
-            @AuthenticationPrincipal User user
-    ) {
+            @AuthenticationPrincipal User user) {
         return planningService.create(request, user);
     }
 
@@ -39,8 +41,7 @@ public class PlanningItemController {
     public PlanningItemResponse update(
             @PathVariable String id,
             @RequestBody PlanningItemRequest request,
-            @AuthenticationPrincipal User user
-    ) {
+            @AuthenticationPrincipal User user) {
         return planningService.update(id, request, user);
     }
 
@@ -48,8 +49,7 @@ public class PlanningItemController {
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR')")
     public void delete(
             @PathVariable String id,
-            @AuthenticationPrincipal User user
-    ) {
+            @AuthenticationPrincipal User user) {
         planningService.delete(id, user);
     }
 

@@ -17,10 +17,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -37,18 +40,15 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletResponse response
-    ) {
+            HttpServletResponse response) {
         authService.login(request, response);
         return ResponseEntity.ok("Login successful");
     }
 
-
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(
             @CookieValue(name = "refresh_token", required = false) String refreshToken,
-            HttpServletResponse response
-    ) {
+            HttpServletResponse response) {
         authService.refresh(refreshToken, response);
         return ResponseEntity.ok("Access token refreshed");
     }
@@ -86,24 +86,21 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(
-            @Valid @RequestBody ForgotPasswordRequest request
-    ) {
+            @Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request.getEmail());
         return ResponseEntity.ok("Password reset email sent");
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(
-            @Valid @RequestBody ResetPasswordRequest request
-    ) {
+            @Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok("Password updated successfully");
     }
 
     @PatchMapping("/change-password")
     public ResponseEntity<?> changePassword(
-            @Valid @RequestBody ChangePasswordRequest request
-    ) {
+            @Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
         return ResponseEntity.ok("Password changed successfully");
     }
