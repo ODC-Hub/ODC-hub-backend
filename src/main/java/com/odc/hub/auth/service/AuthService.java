@@ -27,16 +27,22 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
-
     private final AuditService auditService;
 
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+            EmailService emailService, AuditService auditService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.emailService = emailService;
+        this.auditService = auditService;
+    }
 
     private static final int MAX_ATTEMPTS = 5;
     private static final int ATTEMPT_WINDOW_MINUTES = 1;
@@ -96,8 +102,7 @@ public class AuthService {
 
             throw new ResponseStatusException(
                     HttpStatus.LOCKED,
-                    "Account locked. Try again later."
-            );
+                    "Account locked. Try again later.");
         }
 
         // Check ACTIVE
@@ -110,8 +115,7 @@ public class AuthService {
             handleFailedLogin(user);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "Invalid email or password"
-            );
+                    "Invalid email or password");
         }
 
         // SUCCESS → reset security counters
@@ -141,9 +145,8 @@ public class AuthService {
 
         Instant now = Instant.now();
 
-        boolean wasAlreadyLocked =
-                user.getLockedUntil() != null &&
-                        user.getLockedUntil().isAfter(now);
+        boolean wasAlreadyLocked = user.getLockedUntil() != null &&
+                user.getLockedUntil().isAfter(now);
 
         // If last failure was too old → reset window
         if (user.getLastFailedLoginAt() == null ||
@@ -165,8 +168,7 @@ public class AuthService {
                     user,
                     "ACCOUNT_LOCKED",
                     "ACTIVE",
-                    "DISABLED"
-            );
+                    "DISABLED");
         }
 
         userRepository.save(user);
@@ -190,7 +192,6 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
-
         String userId = jwtService.extractClaims(refreshToken).getSubject();
 
         User user = userRepository.findById(userId)
@@ -212,8 +213,8 @@ public class AuthService {
 
     public void forgotPassword(String email) {
 
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new RuntimeException("User return;not found"));
+        // User user = userRepository.findByEmail(email)
+        // .orElseThrow(() -> new RuntimeException("User return;not found"));
 
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
@@ -228,13 +229,11 @@ public class AuthService {
 
             if (user.getPasswordResetRequestCount() >= MAX_RESET_REQUESTS) {
                 throw new RuntimeException(
-                        "Too many reset requests. Try later."
-                );
+                        "Too many reset requests. Try later.");
             }
 
             user.setPasswordResetRequestCount(
-                    user.getPasswordResetRequestCount() + 1
-            );
+                    user.getPasswordResetRequestCount() + 1);
         } else {
             user.setPasswordResetRequestCount(1);
         }
@@ -245,27 +244,22 @@ public class AuthService {
 
         user.setResetPasswordToken(passwordEncoder.encode(rawToken));
         user.setResetPasswordTokenExpiry(
-                now.plus(15, ChronoUnit.MINUTES)
-        );
+                now.plus(15, ChronoUnit.MINUTES));
 
         userRepository.save(user);
 
         emailService.sendPasswordResetEmail(
                 user.getEmail(),
-                rawToken
-        );
+                rawToken);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
 
         User user = userRepository.findAll().stream()
-                .filter(u ->
-                        u.getResetPasswordToken() != null &&
-                                passwordEncoder.matches(
-                                        request.getToken(),
-                                        u.getResetPasswordToken()
-                                )
-                )
+                .filter(u -> u.getResetPasswordToken() != null &&
+                        passwordEncoder.matches(
+                                request.getToken(),
+                                u.getResetPasswordToken()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Invalid token"));
 
@@ -274,8 +268,7 @@ public class AuthService {
         }
 
         user.setPassword(
-                passwordEncoder.encode(request.getNewPassword())
-        );
+                passwordEncoder.encode(request.getNewPassword()));
 
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
@@ -288,8 +281,7 @@ public class AuthService {
                 user,
                 "CHANGE_PASSWORD",
                 "****",
-                "****"
-        );
+                "****");
 
     }
 
@@ -300,11 +292,10 @@ public class AuthService {
                 .getAuthentication()
                 .getPrincipal();
 
- if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Current password is incorrect"
-            );
+                    "Current password is incorrect");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -312,6 +303,5 @@ public class AuthService {
 
         userRepository.save(user);
     }
-
 
 }

@@ -25,11 +25,15 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@RequiredArgsConstructor
 public class AvatarService {
 
     private final GridFsTemplate gridFsTemplate;
     private final UserRepository userRepository;
+
+    public AvatarService(GridFsTemplate gridFsTemplate, UserRepository userRepository) {
+        this.gridFsTemplate = gridFsTemplate;
+        this.userRepository = userRepository;
+    }
 
     public Map<String, String> uploadAvatar(MultipartFile file) {
 
@@ -44,8 +48,7 @@ public class AvatarService {
         List<String> allowedTypes = List.of(
                 MediaType.IMAGE_JPEG_VALUE,
                 MediaType.IMAGE_PNG_VALUE,
-                "image/webp"
-        );
+                "image/webp");
         if (contentType == null || !allowedTypes.contains(contentType)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only JPG, PNG, WEBP allowed");
         }
@@ -57,8 +60,7 @@ public class AvatarService {
         // 2- Delete old avatar
         if (user.getAvatarFileId() != null) {
             gridFsTemplate.delete(
-                    Query.query(Criteria.where("_id").is(user.getAvatarFileId()))
-            );
+                    Query.query(Criteria.where("_id").is(user.getAvatarFileId())));
         }
 
         // 3- Store with metadata
@@ -72,8 +74,7 @@ public class AvatarService {
                     file.getInputStream(),
                     file.getOriginalFilename(),
                     contentType,
-                    metadata
-            );
+                    metadata);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Upload failed");
         }
@@ -93,8 +94,7 @@ public class AvatarService {
         }
 
         GridFSFile gridFile = gridFsTemplate.findOne(
-                Query.query(Criteria.where("_id").is(user.getAvatarFileId()))
-        );
+                Query.query(Criteria.where("_id").is(user.getAvatarFileId())));
 
         if (gridFile == null) {
             user.setAvatarFileId(null);
@@ -127,4 +127,3 @@ public class AvatarService {
     }
 
 }
-

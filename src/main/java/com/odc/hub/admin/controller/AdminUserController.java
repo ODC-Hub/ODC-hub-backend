@@ -13,10 +13,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/users")
-@RequiredArgsConstructor
 public class AdminUserController {
 
     private final UserService userService;
+
+    public AdminUserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<UserResponseDto> getAllUsers() {
@@ -32,8 +35,7 @@ public class AdminUserController {
     public List<UserResponseDto> search(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) Role role,
-            @RequestParam(required = false) AccountStatus status
-    ) {
+            @RequestParam(required = false) AccountStatus status) {
         return userService.searchUsers(email, role, status);
     }
 
@@ -58,8 +60,7 @@ public class AdminUserController {
     @PatchMapping("/{id}/role")
     public ResponseEntity<?> changeRole(
             @PathVariable String id,
-            @RequestParam Role role
-    ) {
+            @RequestParam Role role) {
         userService.changeUserRole(id, role);
         return ResponseEntity.ok("Role updated");
     }
@@ -67,12 +68,9 @@ public class AdminUserController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> changeStatus(
             @PathVariable String id,
-            @RequestParam AccountStatus status
-    ) {
+            @RequestParam AccountStatus status) {
         userService.changeStatus(id, status);
         return ResponseEntity.ok("Status updated");
     }
-
-
 
 }
