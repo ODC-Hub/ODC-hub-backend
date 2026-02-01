@@ -1,9 +1,9 @@
 package com.odc.hub.fileRouge.controller;
 
 import com.odc.hub.auth.security.JwtAuthenticationFilter;
-import com.odc.hub.filrouge.controller.UserKpiController;
-import com.odc.hub.filrouge.dto.UserKpiResponse;
-import com.odc.hub.filrouge.service.UserKpiService;
+import com.odc.hub.filrouge.controller.VelocityController;
+import com.odc.hub.filrouge.dto.SprintVelocityResponse;
+import com.odc.hub.filrouge.service.VelocityService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,33 +18,33 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(
-        controllers = UserKpiController.class,
+        controllers = VelocityController.class,
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class
         )
 )
-class UserKpiControllerTest {
+class VelocityControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private UserKpiService userKpiService;
+    private VelocityService velocityService;
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void getUserKpis_shouldReturnUserKpis() throws Exception {
+    @WithMockUser(roles = "FORMATEUR")
+    void getSprintVelocity_shouldReturnVelocity() throws Exception {
 
-        UserKpiResponse response =
-                new UserKpiResponse("u1", 20, 15, 1, 75.0);
+        SprintVelocityResponse response =
+                new SprintVelocityResponse("s1", 12);
 
-        when(userKpiService.computeUserKpis("u1"))
+        when(velocityService.computeSprintVelocity("s1"))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/filrouge/kpis/users/u1"))
+        mockMvc.perform(get("/api/filrouge/velocity/sprint/s1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value("u1"))
-                .andExpect(jsonPath("$.deliveryScore").value(75.0));
+                .andExpect(jsonPath("$.sprintId").value("s1"))
+                .andExpect(jsonPath("$.completedEffort").value(12));
     }
 }

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(KpiController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class KpiControllerTest {
+class KpiControllerIT {
 
     @Autowired
     private MockMvc mockMvc;

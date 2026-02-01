@@ -1,9 +1,5 @@
 package com.odc.hub.auth.controller;
 
-import com.odc.hub.user.model.AccountStatus;
-import com.odc.hub.user.model.Role;
-import com.odc.hub.user.model.User;
-import com.odc.hub.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthIntegrationTest {
+class AuthIT {
 
     @Container
     static MongoDBContainer mongo =

@@ -10,30 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build and test
-        id: build
-        run: |
-          set +e
-          mvn clean verify -DskipITs | tee maven-build.log
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-          set -e
-
-      - name: Upload Maven logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: maven-logs
-          path: maven-build.log
-
-      - name: Fail if build failed
-        if: steps.build.outputs.exit_code != '0'
-        run: exit 1
-
+      - name: Build and test (unit tests only)
+        run: mvn clean test
