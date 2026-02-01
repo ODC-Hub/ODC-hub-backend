@@ -17,5 +17,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build and test (unit tests only)
-        run: mvn clean test
+      - name: Build & test
+        run: mvn clean package
+
+      - name: Build Docker image
+        run: docker build -t odc-hub-backend:ci .
+
