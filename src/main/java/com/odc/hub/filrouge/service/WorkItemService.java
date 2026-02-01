@@ -23,8 +23,7 @@ public class WorkItemService {
     public WorkItemDocument createWorkItem(
             String projectId,
             String sprintId,
-            CreateWorkItemRequest request
-    ) {
+            CreateWorkItemRequest request) {
 
         if (request.effort() == null || request.effort() <= 0) {
             throw new IllegalStateException("Effort must be > 0");
@@ -62,8 +61,7 @@ public class WorkItemService {
     /* UPDATE STATUS WITH RULES */
     public WorkItemDocument updateStatus(
             String workItemId,
-            UpdateWorkItemStatusRequest request
-    ) {
+            UpdateWorkItemStatusRequest request) {
 
         WorkItemDocument item = workItemRepository.findById(workItemId)
                 .orElseThrow(() -> new IllegalStateException("WorkItem not found"));
@@ -81,6 +79,8 @@ public class WorkItemService {
 
     private boolean isValidTransition(WorkItemStatus from, WorkItemStatus to) {
         return (from == WorkItemStatus.TODO && to == WorkItemStatus.DOING)
-                || (from == WorkItemStatus.DOING && to == WorkItemStatus.DONE);
+                || (from == WorkItemStatus.DOING && to == WorkItemStatus.DONE)
+                || (from == WorkItemStatus.DONE && to == WorkItemStatus.DOING)
+                || (from == WorkItemStatus.DOING && to == WorkItemStatus.TODO);
     }
 }

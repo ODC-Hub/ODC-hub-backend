@@ -23,13 +23,26 @@ public class ProjectController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public ProjectResponse createProject(
-            @RequestBody CreateProjectRequest request
-    ) {
+            @RequestBody CreateProjectRequest request) {
         User currentUser = userService.getCurrentAuthenticatedUser();
 
-        ProjectDocument project =
-                projectService.createProject(request, currentUser.getId());
+        ProjectDocument project = projectService.createProject(request, currentUser.getId());
 
+        return ProjectMapper.toResponse(project);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public java.util.List<ProjectResponse> getAllProjects() {
+        return projectService.getAllProjects().stream()
+                .map(ProjectMapper::toResponse)
+                .toList();
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public ProjectResponse getProject(@PathVariable String id) {
+        ProjectDocument project = projectService.getProjectOrThrow(id);
         return ProjectMapper.toResponse(project);
     }
 }

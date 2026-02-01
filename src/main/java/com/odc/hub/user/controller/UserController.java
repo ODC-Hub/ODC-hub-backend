@@ -25,7 +25,7 @@ public class UserController {
     private final UserService userService;
 
     public UserController(UserRepository userRepository,
-                              PasswordEncoder passwordEncoder, UserService userService) {
+            PasswordEncoder passwordEncoder, UserService userService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
@@ -33,8 +33,7 @@ public class UserController {
 
     @PatchMapping
     public ProfileResponseDto updateProfile(
-            @Valid @RequestBody UpdateProfileRequest request
-    ) {
+            @Valid @RequestBody UpdateProfileRequest request) {
         return userService.updateProfile(request);
     }
 
@@ -43,30 +42,38 @@ public class UserController {
         return userService.getCurrentProfile();
     }
 
-//    @GetMapping("/create-admin")
-//    public User createAdmin() {
-//
-//        if (userRepository.existsByEmail("admin@odc.com")) {
-//            throw new RuntimeException("Admin already exists");
-//        }
-//
-//        User admin = new User();
-//        admin.setEmail("admin@odc.com");
-//        admin.setPassword(passwordEncoder.encode("Admin@123"));
-//        admin.setRole(Role.ADMIN);
-//        admin.setStatus(AccountStatus.ACTIVE);
-//
-//        return userRepository.save(admin);
-//    }
+    @GetMapping("/search")
+    public java.util.List<UserResponseDto> search(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) AccountStatus status) {
+        return userService.searchUsers(email, role, status);
+    }
 
-//    @GetMapping("/create-user")
-//    public User create() {
-//        User user = new User(
-//                "test@odc.com",
-//                passwordEncoder.encode("Test123!"),
-//                Role.BOOTCAMPER
-//        );
-//        return userRepository.save(user);
-//    }
+    // @GetMapping("/create-admin")
+    // public User createAdmin() {
+    //
+    // if (userRepository.existsByEmail("admin@odc.com")) {
+    // throw new RuntimeException("Admin already exists");
+    // }
+    //
+    // User admin = new User();
+    // admin.setEmail("admin@odc.com");
+    // admin.setPassword(passwordEncoder.encode("Admin@123"));
+    // admin.setRole(Role.ADMIN);
+    // admin.setStatus(AccountStatus.ACTIVE);
+    //
+    // return userRepository.save(admin);
+    // }
+
+    // @GetMapping("/create-user")
+    // public User create() {
+    // User user = new User(
+    // "test@odc.com",
+    // passwordEncoder.encode("Test123!"),
+    // Role.BOOTCAMPER
+    // );
+    // return userRepository.save(user);
+    // }
 
 }

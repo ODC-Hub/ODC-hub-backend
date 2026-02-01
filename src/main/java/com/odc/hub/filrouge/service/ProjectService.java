@@ -38,4 +38,8 @@ public class ProjectService {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalStateException("Project not found"));
     }
+
+    public List<ProjectDocument> getAllProjects() {
+        return projectRepository.findAll();
+    }
 }

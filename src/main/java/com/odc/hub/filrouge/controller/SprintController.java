@@ -20,28 +20,32 @@ public class SprintController {
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public SprintResponse createSprint(
             @PathVariable String projectId,
-            @RequestBody CreateSprintRequest request
-    ) {
-        SprintDocument sprint =
-                sprintService.createSprint(projectId, request);
+            @RequestBody CreateSprintRequest request) {
+        SprintDocument sprint = sprintService.createSprint(projectId, request);
 
         return SprintMapper.toResponse(sprint);
+    }
+
+    @GetMapping("/project/{projectId}")
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public java.util.List<SprintResponse> getSprintsByProject(@PathVariable String projectId) {
+        return sprintService.getSprintsByProject(projectId).stream()
+                .map(SprintMapper::toResponse)
+                .toList();
     }
 
     @PostMapping("/{sprintId}/start")
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public SprintResponse startSprint(@PathVariable String sprintId) {
         return SprintMapper.toResponse(
-                sprintService.startSprint(sprintId)
-        );
+                sprintService.startSprint(sprintId));
     }
 
     @PostMapping("/{sprintId}/close")
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public void closeSprint(
             @PathVariable String sprintId,
-            @RequestParam String nextSprintId
-    ) {
+            @RequestParam String nextSprintId) {
         sprintService.closeSprint(sprintId, nextSprintId);
     }
 }
