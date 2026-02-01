@@ -20,12 +20,20 @@ jobs:
           java-version: '17'
 
       - name: Build and test
+        id: build
         run: |
+          set +e
           mvn clean verify -DskipITs | tee maven-build.log
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+          set -e
 
       - name: Upload Maven logs
-        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: maven-logs
           path: maven-build.log
+
+      - name: Fail if build failed
+        if: steps.build.outputs.exit_code != '0'
+        run: exit 1
+
