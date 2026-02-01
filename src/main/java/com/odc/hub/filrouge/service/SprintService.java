@@ -43,13 +43,11 @@ public class SprintService {
         }
 
         sprintRepository.findByProjectIdAndStatus(
-                sprint.getProjectId(), SprintStatus.ACTIVE
-        ).ifPresent(s -> {
-            throw new IllegalStateException("Another sprint is already ACTIVE");
-        });
+                sprint.getProjectId(), SprintStatus.ACTIVE).ifPresent(s -> {
+                    throw new IllegalStateException("Another sprint is already ACTIVE");
+                });
 
-        List<WorkItemDocument> items =
-                workItemRepository.findBySprintId(sprintId);
+        List<WorkItemDocument> items = workItemRepository.findBySprintId(sprintId);
 
         int plannedEffort = items.stream()
                 .mapToInt(WorkItemDocument::getEffort)
@@ -70,8 +68,7 @@ public class SprintService {
             throw new IllegalStateException("Only ACTIVE sprint can be closed");
         }
 
-        List<WorkItemDocument> items =
-                workItemRepository.findBySprintId(sprintId);
+        List<WorkItemDocument> items = workItemRepository.findBySprintId(sprintId);
 
         for (WorkItemDocument oldItem : items) {
 
@@ -102,9 +99,12 @@ public class SprintService {
         sprintRepository.save(sprint);
     }
 
-
     private SprintDocument getSprintOrThrow(String sprintId) {
         return sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new IllegalStateException("Sprint not found"));
+    }
+
+    public List<SprintDocument> getSprintsByProject(String projectId) {
+        return sprintRepository.findByProjectId(projectId);
     }
 }
