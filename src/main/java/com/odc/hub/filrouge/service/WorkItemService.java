@@ -30,12 +30,16 @@ public class WorkItemService {
         }
 
         if (request.deadline() == null ||
-                request.deadline().isBefore(Instant.now())) {
+                request.deadline().isBefore(Instant.now().minusSeconds(300))) {
             throw new IllegalStateException("Invalid deadline");
         }
 
         ProjectDocument project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalStateException("Project not found"));
+
+        if (project.getMembers() == null) {
+            throw new IllegalStateException("Project has no members");
+        }
 
         for (String userId : request.assignedUserIds()) {
             if (!project.getMembers().contains(userId)) {
