@@ -33,7 +33,23 @@ public class SprintService {
         return sprintRepository.save(sprint);
     }
 
-    /* START SPRINT (FREEZE COMMITMENT) */
+    /* UPDATE SPRINT */
+    public SprintDocument updateSprint(String sprintId, CreateSprintRequest request) {
+
+        SprintDocument sprint = getSprintOrThrow(sprintId);
+
+        if (sprint.getStatus() != SprintStatus.PLANNED) {
+            throw new IllegalStateException("Only PLANNED sprint can be updated");
+        }
+
+        sprint.setName(request.name());
+        sprint.setStartDate(request.startDate());
+        sprint.setEndDate(request.endDate());
+
+        return sprintRepository.save(sprint);
+    }
+
+    /* START SPRINT */
     public SprintDocument startSprint(String sprintId) {
 
         SprintDocument sprint = getSprintOrThrow(sprintId);
@@ -43,9 +59,10 @@ public class SprintService {
         }
 
         sprintRepository.findByProjectIdAndStatus(
-                sprint.getProjectId(), SprintStatus.ACTIVE).ifPresent(s -> {
-                    throw new IllegalStateException("Another sprint is already ACTIVE");
-                });
+                sprint.getProjectId(), SprintStatus.ACTIVE
+        ).ifPresent(s -> {
+            throw new IllegalStateException("Another sprint is already ACTIVE");
+        });
 
         List<WorkItemDocument> items = workItemRepository.findBySprintId(sprintId);
 
@@ -59,7 +76,7 @@ public class SprintService {
         return sprintRepository.save(sprint);
     }
 
-    /* CLOSE SPRINT + CARRYOVER */
+    /* CLOSE SPRINT */
     public void closeSprint(String sprintId, String nextSprintId) {
 
         SprintDocument sprint = getSprintOrThrow(sprintId);
@@ -71,14 +88,11 @@ public class SprintService {
         List<WorkItemDocument> items = workItemRepository.findBySprintId(sprintId);
 
         for (WorkItemDocument oldItem : items) {
-
             if (oldItem.getStatus() != WorkItemStatus.DONE) {
 
-                // 1️⃣ Update OLD item (history)
                 oldItem.setCarryCount(oldItem.getCarryCount() + 1);
                 workItemRepository.save(oldItem);
 
-                // 2️⃣ Create NEW item for next sprint
                 WorkItemDocument newItem = new WorkItemDocument();
                 newItem.setProjectId(oldItem.getProjectId());
                 newItem.setSprintId(nextSprintId);
@@ -99,6 +113,7 @@ public class SprintService {
         sprintRepository.save(sprint);
     }
 
+    /* HELPERS */
     private SprintDocument getSprintOrThrow(String sprintId) {
         return sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new IllegalStateException("Sprint not found"));
