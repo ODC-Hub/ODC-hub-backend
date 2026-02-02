@@ -42,4 +42,26 @@ public class ProjectService {
     public List<ProjectDocument> getAllProjects() {
         return projectRepository.findAll();
     }
+
+    public ProjectDocument addMember(String projectId, String userId) {
+        ProjectDocument project = getProjectOrThrow(projectId);
+        List<String> members = new ArrayList<>(project.getMembers());
+        if (!members.contains(userId)) {
+            members.add(userId);
+            project.setMembers(members);
+            return projectRepository.save(project);
+        }
+        return project;
+    }
+
+    public ProjectDocument removeMember(String projectId, String userId) {
+        ProjectDocument project = getProjectOrThrow(projectId);
+        List<String> members = new ArrayList<>(project.getMembers());
+        if (members.contains(userId)) {
+            members.remove(userId);
+            project.setMembers(members);
+            return projectRepository.save(project);
+        }
+        return project;
+    }
 }

@@ -45,4 +45,18 @@ public class ProjectController {
         ProjectDocument project = projectService.getProjectOrThrow(id);
         return ProjectMapper.toResponse(project);
     }
+
+    @PostMapping("/{id}/members/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public ProjectResponse addMember(@PathVariable String id, @PathVariable String userId) {
+        ProjectDocument project = projectService.addMember(id, userId);
+        return ProjectMapper.toResponse(project);
+    }
+
+    @DeleteMapping("/{id}/members/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public ProjectResponse removeMember(@PathVariable String id, @PathVariable String userId) {
+        ProjectDocument project = projectService.removeMember(id, userId);
+        return ProjectMapper.toResponse(project);
+    }
 }
