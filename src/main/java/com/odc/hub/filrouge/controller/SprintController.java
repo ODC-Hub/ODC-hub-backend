@@ -48,4 +48,13 @@ public class SprintController {
             @RequestParam String nextSprintId) {
         sprintService.closeSprint(sprintId, nextSprintId);
     }
+
+    @PutMapping("/{sprintId}")
+    @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
+    public SprintResponse updateSprint(
+            @PathVariable String sprintId,
+            @RequestBody CreateSprintRequest request) {
+        return SprintMapper.toResponse(
+                sprintService.updateSprint(sprintId, request));
+    }
 }

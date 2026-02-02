@@ -107,4 +107,12 @@ public class SprintService {
     public List<SprintDocument> getSprintsByProject(String projectId) {
         return sprintRepository.findByProjectId(projectId);
     }
+
+    public SprintDocument updateSprint(String sprintId, CreateSprintRequest request) {
+        SprintDocument sprint = getSprintOrThrow(sprintId);
+        sprint.setName(request.name());
+        sprint.setStartDate(request.startDate());
+        sprint.setEndDate(request.endDate());
+        return sprintRepository.save(sprint);
+    }
 }
