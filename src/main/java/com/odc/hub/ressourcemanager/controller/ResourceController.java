@@ -58,8 +58,9 @@ public class ResourceController {
 
         @GetMapping
         public ResponseEntity<List<ResourceResponse>> getAllResources(
-                        @RequestParam(defaultValue = "false") boolean validatedOnly) {
+                        @RequestParam(defaultValue = "false") boolean validatedOnly,
+                        Principal principal) {
                 return ResponseEntity.ok(
-                                resourceService.getAllResources(validatedOnly));
+                                resourceService.getAllResources(validatedOnly, principal.getName()));
         }
 }

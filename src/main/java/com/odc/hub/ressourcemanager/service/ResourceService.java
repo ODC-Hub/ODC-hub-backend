@@ -30,6 +30,7 @@ public class ResourceService {
             ResourceCreateRequest request,
             MultipartFile file,
             String createdBy) {
+        log.info("Creating resource with request: {}", request);
         Resource resource = resourceMapper.toEntity(request, createdBy);
 
         if (file != null && !file.isEmpty()) {
@@ -39,6 +40,7 @@ public class ResourceService {
         }
 
         Resource saved = resourceRepository.save(resource);
+        log.info("Resource saved with ID: {}, assignedTo: {}", saved.getId(), saved.getAssignedTo());
         return resourceMapper.toResponse(saved);
     }
 
@@ -46,29 +48,12 @@ public class ResourceService {
             String moduleId,
             boolean onlyValidated,
             String userEmail) {
+        log.info("Fetching resources for module: {} and user: {}", moduleId, userEmail);
         List<Resource> resources = onlyValidated
                 ? resourceRepository.findByModuleIdAndValidatedTrue(moduleId)
                 : resourceRepository.findByModuleId(moduleId);
 
-        // Filter by assignedTo if user is a bootcamper
-        return userRepository.findByEmail(userEmail)
-                .map(user -> {
-                    if (user.getRole() == Role.BOOTCAMPER) {
-                        return resources.stream()
-                                .filter(r -> r.getAssignedTo() == null ||
-                                        r.getAssignedTo().isEmpty() ||
-                                        r.getAssignedTo().contains(user.getId()))
-                                .map(this::mapToResponseWithStats)
-                                .collect(Collectors.toList());
-                    } else {
-                        return resources.stream()
-                                .map(this::mapToResponseWithStats)
-                                .collect(Collectors.toList());
-                    }
-                })
-                .orElse(resources.stream()
-                        .map(this::mapToResponseWithStats)
-                        .collect(Collectors.toList()));
+        return filterResourcesByUser(resources, userEmail);
     }
 
     public void validateResource(String resourceId) {
@@ -85,14 +70,53 @@ public class ResourceService {
         resourceRepository.delete(resource);
     }
 
-    public List<ResourceResponse> getAllResources(boolean onlyValidated) {
+    public List<ResourceResponse> getAllResources(boolean onlyValidated, String userEmail) {
+        log.info("Fetching all resources for user: {}", userEmail);
         List<Resource> resources = onlyValidated
                 ? resourceRepository.findByValidatedTrue()
                 : resourceRepository.findAll();
 
-        return resources.stream()
-                .map(this::mapToResponseWithStats)
-                .collect(Collectors.toList());
+        return filterResourcesByUser(resources, userEmail);
+    }
+
+    private List<ResourceResponse> filterResourcesByUser(List<Resource> resources, String userEmail) {
+        return userRepository.findByEmail(userEmail)
+                .map(user -> {
+                    log.info("Filtering for User: {} with role: {}", user.getEmail(), user.getRole());
+                    if (user.getRole() == Role.BOOTCAMPER) {
+                        List<ResourceResponse> filtered = resources.stream()
+                                .filter(r -> {
+                                    // Logic: Visible if assignedTo is null/empty OR explicitly assigned to user
+                                    boolean assignedToAll = r.getAssignedTo() == null || r.getAssignedTo().isEmpty();
+                                    boolean explicitlyAssigned = r.getAssignedTo() != null
+                                            && r.getAssignedTo().contains(user.getId());
+
+                                    boolean isVisible = assignedToAll || explicitlyAssigned;
+
+                                    if (!isVisible) {
+                                        log.debug("Hiding resource {} (assignedTo: {}) from user {}",
+                                                r.getTitle(), r.getAssignedTo(), user.getId());
+                                    }
+                                    return isVisible;
+                                })
+                                .map(this::mapToResponseWithStats)
+                                .collect(Collectors.toList());
+                        log.info("Returning {} resources after filtering (original: {})", filtered.size(),
+                                resources.size());
+                        return filtered;
+                    } else {
+                        log.info("User is not a bootcamper, returning all {} resources", resources.size());
+                        return resources.stream()
+                                .map(this::mapToResponseWithStats)
+                                .collect(Collectors.toList());
+                    }
+                })
+                .orElseGet(() -> {
+                    log.warn("User not found for email: {}, returning all resources", userEmail);
+                    return resources.stream()
+                            .map(this::mapToResponseWithStats)
+                            .collect(Collectors.toList());
+                });
     }
 
     private ResourceResponse mapToResponseWithStats(Resource resource) {

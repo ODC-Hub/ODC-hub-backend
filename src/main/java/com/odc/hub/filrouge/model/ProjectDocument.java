@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.ArrayList;
 
 @Getter
 @Setter
@@ -22,7 +22,7 @@ public class ProjectDocument {
     private String description;
 
     private String createdBy;
-    private List<String> members;
+    private ArrayList<String> members = new ArrayList<>();
 
     private Instant createdAt;
 
