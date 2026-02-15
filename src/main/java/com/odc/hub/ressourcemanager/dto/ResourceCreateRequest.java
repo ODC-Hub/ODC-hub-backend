@@ -20,8 +20,13 @@ public class ResourceCreateRequest {
     @NotBlank
     private String moduleId;
 
+    @NotBlank
+    private String description;
+
     @NotNull
     private ResourceType type;
 
     private String link;
+
+    private java.util.List<String> assignedTo;
 }

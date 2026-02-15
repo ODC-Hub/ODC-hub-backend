@@ -11,4 +11,10 @@ public interface LivrableRepository extends MongoRepository<Livrable, String> {
     List<Livrable> findByResourceId(String resourceId);
 
     Optional<Livrable> findByResourceIdAndBootcamperId(String resourceId, String bootcamperId);
+
+    List<Livrable> findByBootcamperId(String bootcamperId);
+
+    long countByResourceId(String resourceId);
+
+    long countByResourceIdAndStatus(String resourceId, com.odc.hub.ressourcemanager.enums.LivrableStatus status);
 }

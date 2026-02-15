@@ -19,11 +19,15 @@ public class Resource {
 
     private String title;
     private String moduleId;
+    private String description;
 
     private ResourceType type;
 
     private String gridFsFileId;
+    private String filename;
     private String link;
+
+    private java.util.List<String> assignedTo;
 
     private String createdBy;
     private boolean validated;

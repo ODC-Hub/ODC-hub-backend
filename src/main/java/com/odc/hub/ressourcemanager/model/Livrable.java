@@ -21,6 +21,9 @@ public class Livrable {
     private String bootcamperId;
 
     private String gridFsFileId;
+    private String filename;
+
+    private String studentComment;
 
     @Builder.Default
     private LivrableStatus status = LivrableStatus.PENDING;

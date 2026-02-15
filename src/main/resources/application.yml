@@ -26,3 +26,8 @@ spring:
     secret: ${JWT_SECRET}
     access-token-expiration: 1800000
     refresh-token-expiration: 86400000
+
+logging:
+  level:
+    com.odc.hub.ressourcemanager: DEBUG
+    root: INFO

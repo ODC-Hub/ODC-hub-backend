@@ -7,7 +7,15 @@ import java.util.List;
 
 public interface ResourceRepository extends MongoRepository<Resource, String> {
 
+    List<Resource> findByModuleId(String moduleId);
+
     List<Resource> findByModuleIdAndValidatedTrue(String moduleId);
 
-    List<Resource> findByModuleId(String moduleId);
+    List<Resource> findByValidatedTrue();
+
+    // Find resources where assignedTo array contains this userId (same pattern as
+    // PlanningItemRepository)
+    List<Resource> findByAssignedToContaining(String userId);
+
+    List<Resource> findByModuleIdAndAssignedToContaining(String moduleId, String userId);
 }

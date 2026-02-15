@@ -14,6 +14,6 @@ public class LivrableCreateRequest {
 
     @NotBlank
     private String resourceId;
-    private String comment;
+    private String studentComment;
 
 }
