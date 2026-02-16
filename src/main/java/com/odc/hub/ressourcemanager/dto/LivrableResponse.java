@@ -21,6 +21,12 @@ public class LivrableResponse {
     private LivrableStatus status;
     private String reviewerComment;
 
+    private String studentComment;
+    private String bootcamperName;
+
+    private String fileId;
+    private String filename;
+
     private Instant submittedAt;
 
     // getters & setters

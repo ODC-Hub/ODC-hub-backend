@@ -59,9 +59,10 @@ public class SprintService {
         }
 
         sprintRepository.findByProjectIdAndStatus(
-                sprint.getProjectId(), SprintStatus.ACTIVE).ifPresent(s -> {
-                    throw new IllegalStateException("Another sprint is already ACTIVE");
-                });
+                sprint.getProjectId(), SprintStatus.ACTIVE
+        ).ifPresent(s -> {
+            throw new IllegalStateException("Another sprint is already ACTIVE");
+        });
 
         List<WorkItemDocument> items = workItemRepository.findBySprintId(sprintId);
 
@@ -112,6 +113,7 @@ public class SprintService {
         sprintRepository.save(sprint);
     }
 
+    /* HELPERS */
     private SprintDocument getSprintOrThrow(String sprintId) {
         return sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new IllegalStateException("Sprint not found"));
@@ -120,6 +122,4 @@ public class SprintService {
     public List<SprintDocument> getSprintsByProject(String projectId) {
         return sprintRepository.findByProjectId(projectId);
     }
-
-
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/filrouge/projects")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -34,9 +35,14 @@ public class ProjectController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public java.util.List<ProjectResponse> getAllProjects() {
-        return projectService.getAllProjects().stream()
-                .map(ProjectMapper::toResponse)
-                .toList();
+        try {
+            return projectService.getAllProjects().stream()
+                    .map(ProjectMapper::toResponse)
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @GetMapping("/{id}")

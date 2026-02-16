@@ -17,10 +17,18 @@ public class ResourceResponse {
     private String id;
     private String title;
     private String moduleId;
+    private String description;
     private ResourceType type;
 
     private boolean hasFile;
+    private String gridFsFileId;
+    private String filename;
     private String link;
+
+    private java.util.List<String> assignedTo;
+
+    private long totalSubmissions;
+    private long pendingSubmissions;
 
     private boolean validated;
     private Instant createdAt;

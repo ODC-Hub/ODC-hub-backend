@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,7 +41,7 @@ class WorkItemServiceTest {
     void setUp() {
         project = new ProjectDocument();
         project.setId("proj1");
-        project.setMembers(List.of("user1", "user2"));
+        project.setMembers(new ArrayList<>(List.of("user1", "user2")));
     }
 
     @Test

@@ -23,7 +23,7 @@ public class ProjectService {
         project.setDescription(request.description());
         project.setCreatedBy(creatorUserId);
 
-        List<String> members = new ArrayList<>(request.memberIds());
+        ArrayList<String> members = new ArrayList<>(request.memberIds());
         if (!members.contains(creatorUserId)) {
             members.add(creatorUserId);
         }
@@ -45,7 +45,7 @@ public class ProjectService {
 
     public ProjectDocument addMember(String projectId, String userId) {
         ProjectDocument project = getProjectOrThrow(projectId);
-        List<String> members = new ArrayList<>(project.getMembers());
+        ArrayList<String> members = new ArrayList<>(project.getMembers());
         if (!members.contains(userId)) {
             members.add(userId);
             project.setMembers(members);
@@ -56,7 +56,7 @@ public class ProjectService {
 
     public ProjectDocument removeMember(String projectId, String userId) {
         ProjectDocument project = getProjectOrThrow(projectId);
-        List<String> members = new ArrayList<>(project.getMembers());
+        ArrayList<String> members = new ArrayList<>(project.getMembers());
         if (members.contains(userId)) {
             members.remove(userId);
             project.setMembers(members);

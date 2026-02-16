@@ -7,11 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ResourceCreateRequest {
 
     @NotBlank
@@ -20,8 +22,13 @@ public class ResourceCreateRequest {
     @NotBlank
     private String moduleId;
 
+    @NotBlank
+    private String description;
+
     @NotNull
     private ResourceType type;
 
     private String link;
+
+    private java.util.List<String> assignedTo;
 }
