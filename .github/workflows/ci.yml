@@ -7,10 +7,10 @@ on:
 
 jobs:
   # =========================
-  # 1️⃣ BUILD & TEST
+  # 1️⃣ BUILD, TEST & COVERAGE
   # =========================
   build-test:
-    name: Build & Test
+    name: Build, Test & Coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # ✅ CACHING (UNCHANGED)
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -31,13 +32,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      - name: Run tests
-        run: ./mvnw test
+      # ✅ FULLY AUTOMATED: tests + coverage
+      - name: Run tests & generate coverage
+        run: ./mvnw verify
 
-      - name: Build package
-        run: ./mvnw package -DskipTests
-
-      # 🔑 THIS IS THE MISSING PIECE
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
@@ -46,7 +44,7 @@ jobs:
 
 
   # =========================
-  # 2️⃣ CODE QUALITY (SONAR)
+  # 2️⃣ SONARCLOUD (READS COVERAGE)
   # =========================
   sonar:
     name: SonarCloud Analysis
@@ -72,6 +70,7 @@ jobs:
           args: >
             -Dsonar.projectKey=odc-hub_ODC-hub-backend
             -Dsonar.organization=odc-hub
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
 
   # =========================
