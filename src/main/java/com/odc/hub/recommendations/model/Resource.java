@@ -7,14 +7,11 @@ import org.bson.types.ObjectId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
-@Document(collection = "resources-v2")
+@Document(collection = "resources-v1")
 @Data
 public class Resource {
 
     @Id
-    @JsonIgnore
-    private org.bson.types.ObjectId _id;
-
     private String id;
 
     private String title;

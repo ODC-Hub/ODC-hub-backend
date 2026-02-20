@@ -23,12 +23,12 @@ public class RecommendationService {
 
     public List<Resource> getRecommendationsByModuleId(String moduleId) {
 
-        // 1️⃣ Get module (to know its category)
+        // set module (to know its category)
         Module module = moduleRepository.findById(moduleId)
                 .orElseThrow(() ->
                         new RuntimeException("Module not found: " + moduleId));
 
-        // 2️⃣ Get ML recommendation document
+        // set ML recommendation document
         ModuleRecommendation recommendation = recommendationRepository
                 .findByModuleId(moduleId)
                 .orElseThrow(() ->
@@ -40,15 +40,15 @@ public class RecommendationService {
             return Collections.emptyList();
         }
 
-        // 3️⃣ Extract resource IDs in ranking order
+        // extract resource IDs in ranking order
         List<String> resourceIds = rankedResources.stream()
                 .map(RecommendedResource::getResourceId)
                 .toList();
 
-        // 4️⃣ Fetch resources from DB
+        // fetch resources from DB
         List<Resource> resources = resourceRepository.findByIdIn(resourceIds);
 
-        // 5️⃣ Map by custom ID (not Mongo _id)
+        // map by custom ID (not Mongo _id)
         Map<String, Resource> resourceMap = resources.stream()
                 .filter(r -> r.getId() != null)
                 .collect(Collectors.toMap(
@@ -57,7 +57,6 @@ public class RecommendationService {
                         (existing, replacement) -> existing
                 ));
 
-        // 6️⃣ Preserve ranking + filter by category
         return rankedResources.stream()
                 .map(r -> resourceMap.get(r.getResourceId()))
                 .filter(Objects::nonNull)
@@ -67,4 +66,16 @@ public class RecommendationService {
                 )
                 .toList();
     }
+
+    public Module getModuleById(String moduleId) {
+        return moduleRepository.findById(moduleId)
+                .orElseThrow(() ->
+                        new RuntimeException("Module not found: " + moduleId));
+    }
+
+    public List<Module> getAllModules() {
+        return moduleRepository.findAll();
+    }
+
+
 }
