@@ -13,7 +13,7 @@ env:
   TASK_DEFINITION_FAMILY: odc-hub-backend-task
 
 # =========================
-# 1️⃣ BUILD, TEST & COVERAGE
+# BUILD, TEST & COVERAGE
 # =========================
 jobs:
   build-test:
@@ -47,7 +47,7 @@ jobs:
           path: target/*.jar
 
   # =========================
-  # 2️⃣ SONARCLOUD
+  # SONARCLOUD
   # =========================
   sonar:
     name: SonarCloud Analysis
@@ -75,7 +75,7 @@ jobs:
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
   # =========================
-  # 3️⃣ DOCKER + ECS DEPLOY
+  # DOCKER + ECS DEPLOY
   # =========================
   deploy:
     name: Build, Push & Deploy to ECS
