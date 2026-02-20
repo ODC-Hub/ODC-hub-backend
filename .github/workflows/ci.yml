@@ -7,7 +7,7 @@ on:
 
 jobs:
   # =========================
-  # BUILD & TEST
+  # 1️⃣ BUILD & TEST
   # =========================
   build-test:
     name: Build & Test
@@ -37,9 +37,16 @@ jobs:
       - name: Build package
         run: ./mvnw package -DskipTests
 
+      # 🔑 THIS IS THE MISSING PIECE
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+
 
   # =========================
-  # CODE QUALITY (SONAR)
+  # 2️⃣ CODE QUALITY (SONAR)
   # =========================
   sonar:
     name: SonarCloud Analysis
@@ -63,12 +70,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=ODC-Hub_ODC-hub-backend
+            -Dsonar.projectKey=odc-hub_ODC-hub-backend
             -Dsonar.organization=odc-hub
 
 
   # =========================
-  # DOCKER BUILD & PUSH
+  # 3️⃣ DOCKER BUILD & PUSH
   # =========================
   docker:
     name: Build & Push Docker Image
@@ -78,6 +85,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: target
 
       - name: Build Docker image
         run: docker build -t odc-hub-backend:ci .
