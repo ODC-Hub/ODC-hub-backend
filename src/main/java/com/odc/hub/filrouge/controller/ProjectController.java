@@ -35,23 +35,19 @@ public class ProjectController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public java.util.List<ProjectResponse> getAllProjects() {
-        try {
-            return projectService.getAllProjects().stream()
-                    .map(ProjectMapper::toResponse)
-                    .toList();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+          User currentUser = userService.getCurrentAuthenticatedUser();
+        return projectService.getAllProjectsForUser(currentUser).stream()
+                .map(ProjectMapper::toResponse)
+                .toList();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public ProjectResponse getProject(@PathVariable String id) {
-        ProjectDocument project = projectService.getProjectOrThrow(id);
+      User currentUser = userService.getCurrentAuthenticatedUser();
+        ProjectDocument project = projectService.getProjectIfAllowed(id, currentUser);
         return ProjectMapper.toResponse(project);
     }
-
     @PostMapping("/{id}/members/{userId}")
     @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR','BOOTCAMPER')")
     public ProjectResponse addMember(@PathVariable String id, @PathVariable String userId) {

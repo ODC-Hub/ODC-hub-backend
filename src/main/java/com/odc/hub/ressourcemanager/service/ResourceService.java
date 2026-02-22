@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,13 +48,13 @@ public class ResourceService {
     public List<ResourceResponse> getResourcesByModule(
             String moduleId,
             boolean onlyValidated,
-            String userEmail) {
-        log.info("Fetching resources for module: {} and user: {}", moduleId, userEmail);
+            String userIdentifier) {
+        log.info("Fetching resources for module: {} and userIdentifier: {}", moduleId, userIdentifier);
         List<Resource> resources = onlyValidated
                 ? resourceRepository.findByModuleIdAndValidatedTrue(moduleId)
                 : resourceRepository.findByModuleId(moduleId);
 
-        return filterResourcesByUser(resources, userEmail);
+        return filterResourcesByUser(resources, userIdentifier);
     }
 
     public void validateResource(String resourceId) {
@@ -70,53 +71,61 @@ public class ResourceService {
         resourceRepository.delete(resource);
     }
 
-    public List<ResourceResponse> getAllResources(boolean onlyValidated, String userEmail) {
-        log.info("Fetching all resources for user: {}", userEmail);
+    public List<ResourceResponse> getAllResources(boolean onlyValidated, String userIdentifier) {
+        log.info("Fetching all resources for userIdentifier: {}", userIdentifier);
         List<Resource> resources = onlyValidated
                 ? resourceRepository.findByValidatedTrue()
                 : resourceRepository.findAll();
 
-        return filterResourcesByUser(resources, userEmail);
+        return filterResourcesByUser(resources, userIdentifier);
     }
 
-    private List<ResourceResponse> filterResourcesByUser(List<Resource> resources, String userEmail) {
-        return userRepository.findByEmail(userEmail)
-                .map(user -> {
-                    log.info("Filtering for User: {} with role: {}", user.getEmail(), user.getRole());
-                    if (user.getRole() == Role.BOOTCAMPER) {
-                        List<ResourceResponse> filtered = resources.stream()
-                                .filter(r -> {
-                                    // Logic: Visible if assignedTo is null/empty OR explicitly assigned to user
-                                    boolean assignedToAll = r.getAssignedTo() == null || r.getAssignedTo().isEmpty();
-                                    boolean explicitlyAssigned = r.getAssignedTo() != null
-                                            && r.getAssignedTo().contains(user.getId());
 
-                                    boolean isVisible = assignedToAll || explicitlyAssigned;
+    private List<ResourceResponse> filterResourcesByUser(List<Resource> resources, String userIdentifier) {
+        Optional<com.odc.hub.user.model.User> optUser = Optional.empty();
 
-                                    if (!isVisible) {
-                                        log.debug("Hiding resource {} (assignedTo: {}) from user {}",
-                                                r.getTitle(), r.getAssignedTo(), user.getId());
-                                    }
-                                    return isVisible;
-                                })
-                                .map(this::mapToResponseWithStats)
-                                .collect(Collectors.toList());
-                        log.info("Returning {} resources after filtering (original: {})", filtered.size(),
-                                resources.size());
-                        return filtered;
-                    } else {
-                        log.info("User is not a bootcamper, returning all {} resources", resources.size());
-                        return resources.stream()
-                                .map(this::mapToResponseWithStats)
-                                .collect(Collectors.toList());
+        if (userIdentifier != null && !userIdentifier.isBlank()) {
+            optUser = userRepository.findByEmail(userIdentifier);
+            if (optUser.isEmpty()) {
+                // fallback: maybe controller passed the user id rather than email
+                optUser = userRepository.findById(userIdentifier);
+            }
+        } else {
+            log.debug("No userIdentifier provided (null or blank)");
+        }
+
+        if (optUser.isEmpty()) {
+            log.warn("User not found for identifier '{}'. Returning only public resources.", userIdentifier);
+            return resources.stream()
+                    .filter(r -> r.getAssignedTo() == null || r.getAssignedTo().isEmpty())
+                    .map(this::mapToResponseWithStats)
+                    .collect(Collectors.toList());
+        }
+
+        com.odc.hub.user.model.User user = optUser.get();
+        log.info("Filtering resources for user id='{}' email='{}' role='{}'",
+                user.getId(), user.getEmail(), user.getRole());
+
+        // Admins / Formateurs see everything
+        if (user.getRole() != Role.BOOTCAMPER) {
+            return resources.stream()
+                    .map(this::mapToResponseWithStats)
+                    .collect(Collectors.toList());
+        }
+
+        // Bootcamper: only public resources or those explicitly assigned to them
+        final String currentUserId = user.getId();
+        return resources.stream()
+                .filter(r -> {
+                    // public (no assignment) => visible
+                    if (r.getAssignedTo() == null || r.getAssignedTo().isEmpty()) {
+                        return true;
                     }
+                    // explicitly assigned => visible
+                    return r.getAssignedTo().contains(currentUserId);
                 })
-                .orElseGet(() -> {
-                    log.warn("User not found for email: {}, returning all resources", userEmail);
-                    return resources.stream()
-                            .map(this::mapToResponseWithStats)
-                            .collect(Collectors.toList());
-                });
+                .map(this::mapToResponseWithStats)
+                .collect(Collectors.toList());
     }
 
     private ResourceResponse mapToResponseWithStats(Resource resource) {
