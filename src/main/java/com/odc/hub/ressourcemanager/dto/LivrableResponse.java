@@ -28,6 +28,4 @@ public class LivrableResponse {
     private String filename;
 
     private Instant submittedAt;
-
-    // getters & setters
 }

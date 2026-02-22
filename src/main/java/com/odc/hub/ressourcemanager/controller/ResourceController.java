@@ -3,10 +3,12 @@ package com.odc.hub.ressourcemanager.controller;
 import com.odc.hub.ressourcemanager.dto.ResourceCreateRequest;
 import com.odc.hub.ressourcemanager.dto.ResourceResponse;
 import com.odc.hub.ressourcemanager.service.ResourceService;
+import com.odc.hub.user.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,27 +27,30 @@ public class ResourceController {
         public ResponseEntity<ResourceResponse> createResource(
                         @Valid @RequestPart("data") ResourceCreateRequest request,
                         @RequestPart(value = "file", required = false) MultipartFile file,
-                        Principal principal) {
+                        @AuthenticationPrincipal User user) {
                 return ResponseEntity.ok(
                                 resourceService.createResource(
                                                 request,
                                                 file,
-                                                principal.getName()));
+                                                user));
         }
 
         @GetMapping("/module/{moduleId}")
         public ResponseEntity<List<ResourceResponse>> getResourcesByModule(
                         @PathVariable String moduleId,
                         @RequestParam(defaultValue = "true") boolean validatedOnly,
-                        Principal principal) {
+                        @AuthenticationPrincipal User user) {
                 return ResponseEntity.ok(
-                                resourceService.getResourcesByModule(moduleId, validatedOnly, principal.getName()));
+                                resourceService.getResourcesByModule(moduleId, validatedOnly, user));
         }
 
         @PreAuthorize("hasAnyRole('ADMIN','FORMATEUR')")
         @PatchMapping("/{id}/validate")
-        public ResponseEntity<Void> validateResource(@PathVariable String id) {
-                resourceService.validateResource(id);
+        public ResponseEntity<Void> validateResource(
+                @PathVariable String id,
+                @AuthenticationPrincipal User user
+        ) {
+                resourceService.validateResource(id, user);
                 return ResponseEntity.ok().build();
         }
 
@@ -59,8 +64,8 @@ public class ResourceController {
         @GetMapping
         public ResponseEntity<List<ResourceResponse>> getAllResources(
                         @RequestParam(defaultValue = "false") boolean validatedOnly,
-                        Principal principal) {
+                        @AuthenticationPrincipal User user) {
                 return ResponseEntity.ok(
-                                resourceService.getAllResources(validatedOnly, principal.getName()));
+                                resourceService.getAllResources(validatedOnly, user));
         }
 }

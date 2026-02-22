@@ -17,11 +17,15 @@ public class PlanningItemService {
 
     private final PlanningItemRepository repository;
     private final PlanningItemMapper mapper;
+    private final PlanningNotificationService planningNotificationService;
 
     // ADMIN / FORMATEUR
     public PlanningItemResponse create(PlanningItemRequest request, User creator) {
-        var entity = mapper.toEntity(request, creator.getId());
-        return mapper.toDto(repository.save(entity));
+
+        PlanningItem entity = mapper.toEntity(request, creator.getId());
+        PlanningItem saved = repository.save(entity);
+        planningNotificationService.onCreated(saved, creator);
+        return mapper.toDto(saved);
     }
 
     // ROLE-AWARE FETCH
@@ -51,7 +55,6 @@ public class PlanningItemService {
             throw new RuntimeException("Forbidden");
         }
 
-        // Only update fields that are NOT null
         if (request.title() != null) item.setTitle(request.title());
         if (request.description() != null) item.setDescription(request.description());
         if (request.type() != null) item.setType(request.type());
@@ -60,7 +63,10 @@ public class PlanningItemService {
         if (request.userIds() != null) item.setUserIds(request.userIds());
         if (request.tags() != null) item.setTags(request.tags());
 
-        return mapper.toDto(repository.save(item));
+        PlanningItem saved = repository.save(item);
+
+        planningNotificationService.onUpdated(saved, user);
+        return mapper.toDto(saved);
     }
 
     public void delete(String id, User user) {
@@ -69,13 +75,11 @@ public class PlanningItemService {
             throw new RuntimeException("Forbidden");
         }
 
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Planning item not found");
-        }
+        PlanningItem item = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Planning item not found"));
 
+        planningNotificationService.onDeleted(item, user);
         repository.deleteById(id);
     }
-
-
 
 }
