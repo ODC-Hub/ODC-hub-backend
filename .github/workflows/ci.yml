@@ -9,7 +9,7 @@ env:
   AWS_REGION: eu-west-3
   ECR_REPOSITORY: odc-hub-backend
   ECS_CLUSTER: odc-hub-cluster
-  ECS_SERVICE: odc-hub-backend-task-service
+  ECS_SERVICE: odc-hub-backend-task-service-kixiw51r
   TASK_DEFINITION_FAMILY: odc-hub-backend-task
 
 # =========================
