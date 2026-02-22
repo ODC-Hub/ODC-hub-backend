@@ -1,0 +1,33 @@
+{
+  "family": "odc-hub-backend-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::741448926181:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "odc-hub-backend",
+      "image": "<IMAGE_URI>",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        { "name": "JWT_SECRET", "value": "${JWT_SECRET}" },
+        { "name": "MONGO_URI", "value": "${MONGO_URI}" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/odc-hub-backend",
+          "awslogs-region": "eu-west-3",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

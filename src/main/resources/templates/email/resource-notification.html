@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Resource Notification</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fb;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 20px 24px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 24px;
+            color: #1f2937;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .message-box {
+            background: #f9fafb;
+            border-left: 4px solid #2563eb;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 12px 18px;
+            background: #2563eb;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .footer {
+            padding: 16px 24px;
+            background: #f9fafb;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        ODC Hub — Resource Update
+    </div>
+
+    <div class="content">
+        <p th:text="${title}">New resource available</p>
+
+        <div class="message-box" th:text="${message}">
+            A new resource has been added.
+        </div>
+
+        <a th:href="${link}" class="button">
+            View Resource
+        </a>
+    </div>
+
+    <div class="footer">
+        This is an automated message from ODC Hub.
+    </div>
+</div>
+
+</body>
+</html>

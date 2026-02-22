@@ -33,5 +33,4 @@ public class ResourceResponse {
     private boolean validated;
     private Instant createdAt;
 
-    // getters & setters
 }

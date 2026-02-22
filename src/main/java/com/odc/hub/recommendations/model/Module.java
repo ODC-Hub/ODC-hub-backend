@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "modules-v2")
+@Document(collection = "modules-v1")
 @Data
 public class Module {
 

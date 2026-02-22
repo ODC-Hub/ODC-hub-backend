@@ -13,7 +13,6 @@ public interface ResourceRepository extends MongoRepository<Resource, String> {
 
     List<Resource> findByValidatedTrue();
 
-
     List<Resource> findByAssignedToContaining(String userId);
 
     List<Resource> findByModuleIdAndAssignedToContaining(String moduleId, String userId);

@@ -68,4 +68,93 @@ public class EmailService {
             log.error("Failed to send password reset email to {}", to, e);
         }
     }
+
+    @Async
+    public void sendPlanningNotificationEmail(
+            String to,
+            String title,
+            String message
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("title", title);
+            context.setVariable("message", message);
+            context.setVariable("link", "http://localhost:5173/calendar");
+
+            String html = templateEngine.process(
+                    "email/planning-notification",
+                    context
+            );
+
+            MimeMessage messageMail = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(messageMail, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("ODC Hub – Planning update");
+            helper.setText(html, true);
+
+            mailSender.send(messageMail);
+        } catch (Exception e) {
+            log.error("Failed to send planning email to {}", to, e);
+        }
+    }
+
+    @Async
+    public void sendResourceNotificationEmail(
+            String to,
+            String title,
+            String message,
+            String link
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("title", title);
+            context.setVariable("message", message);
+            context.setVariable("link", link);
+
+            String html = templateEngine.process(
+                    "email/resource-notification",
+                    context
+            );
+
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("ODC Hub – Resource update");
+            helper.setText(html, true);
+
+            mailSender.send(mail);
+        } catch (Exception e) {
+            log.error("Failed to send resource email to {}", to, e);
+        }
+    }
+
+    @Async
+    public void sendLivrableNotificationEmail(
+            String to,
+            String title,
+            String message,
+            String link
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("title", title);
+            context.setVariable("message", message);
+            context.setVariable("link", link);
+
+            String html = templateEngine.process(
+                    "email/livrable-notification",
+                    context
+            );
+
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("ODC Hub – Homework update");
+            helper.setText(html, true);
+
+            mailSender.send(mail);
+        } catch (Exception e) {
+            log.error("Failed to send livrable email to {}", to, e);
+        }
+    }
 }
