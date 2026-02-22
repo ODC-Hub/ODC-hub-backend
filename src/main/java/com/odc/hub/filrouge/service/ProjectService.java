@@ -3,8 +3,11 @@ package com.odc.hub.filrouge.service;
 import com.odc.hub.filrouge.dto.CreateProjectRequest;
 import com.odc.hub.filrouge.model.ProjectDocument;
 import com.odc.hub.filrouge.repository.ProjectRepository;
+import com.odc.hub.user.model.Role;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ public class ProjectService {
         project.setCreatedBy(creatorUserId);
 
         ArrayList<String> members = new ArrayList<>(request.memberIds());
+        // keep creator as member (current behavior)
         if (!members.contains(creatorUserId)) {
             members.add(creatorUserId);
         }
@@ -36,7 +40,32 @@ public class ProjectService {
 
     public ProjectDocument getProjectOrThrow(String projectId) {
         return projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalStateException("Project not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+    }
+
+    // NEW: role-aware fetch
+    public List<ProjectDocument> getAllProjectsForUser(com.odc.hub.user.model.User user) {
+        if (user.getRole() == Role.ADMIN || user.getRole() == Role.FORMATEUR) {
+            return projectRepository.findAll();
+        }
+        // Bootcamper -> only projects where members contains user id
+        return projectRepository.findByMembersContaining(user.getId());
+    }
+
+    // NEW: fetch single project only if user allowed
+    public ProjectDocument getProjectIfAllowed(String projectId, com.odc.hub.user.model.User user) {
+        ProjectDocument project = getProjectOrThrow(projectId);
+
+        if (user.getRole() == Role.ADMIN || user.getRole() == Role.FORMATEUR) {
+            return project;
+        }
+
+        // Bootcamper: must be member
+        if (project.getMembers() != null && project.getMembers().contains(user.getId())) {
+            return project;
+        }
+
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to view this project");
     }
 
     public List<ProjectDocument> getAllProjects() {
