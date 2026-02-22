@@ -157,4 +157,68 @@ public class EmailService {
             log.error("Failed to send livrable email to {}", to, e);
         }
     }
+
+    @Async
+    public void sendProjectNotificationEmail(
+            String to,
+            String title,
+            String message,
+            String link
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("title", title);
+            context.setVariable("message", message);
+            context.setVariable("link", link);
+
+            String html = templateEngine.process(
+                    "email/project-notification",
+                    context
+            );
+
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject("ODC Hub – Project update");
+            helper.setText(html, true);
+
+            mailSender.send(mail);
+        } catch (Exception e) {
+            log.error("Failed to send project email to {}", to, e);
+        }
+    }
+
+    @Async
+    public void sendAdminRegistrationRequestEmail(
+            String to,
+            String userEmail,
+            String link
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("userEmail", userEmail);
+            context.setVariable("link", link);
+
+            String html = templateEngine.process(
+                    "email/admin-registration-request",
+                    context
+            );
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject("ODC Hub – New registration request");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error(
+                    "Failed to send admin registration email to {}",
+                    to,
+                    e
+            );
+        }
+    }
 }

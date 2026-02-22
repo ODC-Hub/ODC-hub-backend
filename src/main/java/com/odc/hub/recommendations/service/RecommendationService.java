@@ -23,47 +23,30 @@ public class RecommendationService {
 
     public List<Resource> getRecommendationsByModuleId(String moduleId) {
 
-        // set module (to know its category)
-        Module module = moduleRepository.findById(moduleId)
-                .orElseThrow(() ->
-                        new RuntimeException("Module not found: " + moduleId));
-
-        // set ML recommendation document
         ModuleRecommendation recommendation = recommendationRepository
                 .findByModuleId(moduleId)
                 .orElseThrow(() ->
-                        new RuntimeException("No recommendations found for module: " + moduleId));
+                        new RuntimeException("No recommendations found for module: " + moduleId)
+                );
 
-        List<RecommendedResource> rankedResources = recommendation.getRecommendedResources();
+        List<RecommendedResource> recommendedResources =
+                recommendation.getRecommendedResources();
 
-        if (rankedResources == null || rankedResources.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        // extract resource IDs in ranking order
-        List<String> resourceIds = rankedResources.stream()
+        List<String> resourceIds = recommendedResources.stream()
                 .map(RecommendedResource::getResourceId)
                 .toList();
 
-        // fetch resources from DB
         List<Resource> resources = resourceRepository.findByIdIn(resourceIds);
 
-        // map by custom ID (not Mongo _id)
         Map<String, Resource> resourceMap = resources.stream()
-                .filter(r -> r.getId() != null)
                 .collect(Collectors.toMap(
                         Resource::getId,
-                        r -> r,
-                        (existing, replacement) -> existing
+                        r -> r
                 ));
 
-        return rankedResources.stream()
+        return recommendedResources.stream()
                 .map(r -> resourceMap.get(r.getResourceId()))
                 .filter(Objects::nonNull)
-                .filter(resource ->
-                        resource.getCategory() != null &&
-                                resource.getCategory().equalsIgnoreCase(module.getCategory())
-                )
                 .toList();
     }
 

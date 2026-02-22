@@ -6,7 +6,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
-public interface ResourcesRepository extends MongoRepository<Resource, ObjectId> {
+public interface ResourcesRepository
+        extends MongoRepository<Resource, ObjectId> {
 
     List<Resource> findByIdIn(List<String> ids);
 }

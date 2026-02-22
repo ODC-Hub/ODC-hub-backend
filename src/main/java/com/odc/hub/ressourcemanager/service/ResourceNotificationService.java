@@ -20,48 +20,48 @@ public class ResourceNotificationService {
     private final EmailService emailService;
     private final UserRepository userRepository;
 
-    // Resource created → notify all bootcampers
+    // RESOURCE CREATED
     public void onResourceCreated(Resource resource, User actor) {
 
-        // 🔒 Homework is handled separately
-        if (resource.getType() == ResourceType.HOMEWORK) {
-            return;
-        }
+        if (resource.getType() == ResourceType.HOMEWORK) return;
 
-        userRepository.findByRole(Role.BOOTCAMPER).forEach(bootcamper -> {
-            notifyUser(
-                    bootcamper,
-                    actor,
-                    NotificationType.RESOURCE_CREATED,
-                    "New resource available",
-                    "\"" + resource.getTitle() + "\" has been added",
-                    resource.getId()
-            );
-        });
-    }
-
-    // Homework assigned → notify assigned bootcampers
-    public void onHomeworkAssigned(Resource resource, User actor) {
-
-        if (resource.getAssignedTo() == null || resource.getAssignedTo().isEmpty()) {
-            return;
-        }
-
-        resource.getAssignedTo().forEach(userId ->
-                userRepository.findById(userId).ifPresent(bootcamper ->
-                        notifyUser(
-                                bootcamper,
-                                actor,
-                                NotificationType.HOMEWORK_ASSIGNED,
-                                "New homework assigned",
-                                "\"" + resource.getTitle() + "\" has been assigned to you",
-                                resource.getId()
-                        )
+        userRepository.findByRole(Role.BOOTCAMPER).forEach(bootcamper ->
+                notifyUser(
+                        bootcamper,
+                        actor,
+                        NotificationType.RESOURCE_CREATED,
+                        "New resource available",
+                        "\"" + resource.getTitle() + "\" has been added",
+                        resource.getId(),
+                        EmailType.RESOURCE
                 )
         );
     }
 
-    // Homework submitted → notify creator (formateur)
+    // HOMEWORK ASSIGNED
+    public void onHomeworkAssigned(Resource resource, User actor) {
+
+        if (resource.getType() != ResourceType.HOMEWORK) return;
+        if (resource.getAssignedTo() == null || resource.getAssignedTo().isEmpty()) return;
+
+        resource.getAssignedTo().stream()
+                .distinct()
+                .forEach(userId ->
+                        userRepository.findById(userId).ifPresent(bootcamper ->
+                                notifyUser(
+                                        bootcamper,
+                                        actor,
+                                        NotificationType.HOMEWORK_ASSIGNED,
+                                        "New homework assigned",
+                                        "\"" + resource.getTitle() + "\" has been assigned to you",
+                                        resource.getId(),
+                                        EmailType.LIVRABLE
+                                )
+                        )
+                );
+    }
+
+    // HOMEWORK SUBMITTED
     public void onHomeworkSubmitted(Resource resource, Livrable livrable, User bootcamper) {
 
         userRepository.findById(resource.getCreatedBy()).ifPresent(creator ->
@@ -71,41 +71,47 @@ public class ResourceNotificationService {
                         NotificationType.HOMEWORK_SUBMITTED,
                         "Homework submitted",
                         bootcamper.getFullName() + " submitted \"" + resource.getTitle() + "\"",
-                        resource.getId()
+                        resource.getId(),
+                        EmailType.LIVRABLE
                 )
         );
     }
 
-    // Homework reviewed → notify bootcamper
+    // HOMEWORK REVIEWED
     public void onHomeworkReviewed(Resource resource, Livrable livrable, User reviewer) {
 
-        userRepository.findById(livrable.getBootcamperId()).ifPresent(bootcamper ->
-                notifyUser(
-                        bootcamper,
-                        reviewer,
-                        NotificationType.HOMEWORK_REVIEWED,
-                        "Homework reviewed",
-                        "\"" + resource.getTitle() + "\" has been reviewed",
-                        resource.getId()
-                )
-        );
+        if (resource.getType() != ResourceType.HOMEWORK) return;
+        if (livrable.getBootcamperId() == null) return;
+
+        userRepository.findById(livrable.getBootcamperId())
+                .filter(u -> resource.getAssignedTo() != null
+                        && resource.getAssignedTo().contains(u.getId()))
+                .ifPresent(bootcamper ->
+                        notifyUser(
+                                bootcamper,
+                                reviewer,
+                                NotificationType.HOMEWORK_REVIEWED,
+                                "Homework reviewed",
+                                "\"" + resource.getTitle() + "\" has been reviewed",
+                                resource.getId(),
+                                EmailType.LIVRABLE
+                        )
+                );
     }
 
-    // Internal helper (shared logic)
+    // INTERNAL DISPATCH
     private void notifyUser(
             User recipient,
             User actor,
             NotificationType type,
             String title,
             String message,
-            String entityId
+            String entityId,
+            EmailType emailType
     ) {
-        // no self-notifications
-        if (recipient.getId().equals(actor.getId())) {
-            return;
-        }
+        if (recipient.getId().equals(actor.getId())) return;
 
-        // In-app + WebSocket
+        // WebSocket + DB
         notificationService.notify(
                 recipient.getId(),
                 actor.getId(),
@@ -117,11 +123,22 @@ public class ResourceNotificationService {
         );
 
         // Email
-        emailService.sendResourceNotificationEmail(
-                recipient.getEmail(),
-                title,
-                message,
-                "http://localhost:5173/resources/" + entityId
-        );
+        switch (emailType) {
+            case RESOURCE -> emailService.sendResourceNotificationEmail(
+                    recipient.getEmail(),
+                    title,
+                    message,
+                    "http://localhost:5173/resources?resourceId=" + entityId            );
+            case LIVRABLE -> emailService.sendLivrableNotificationEmail(
+                    recipient.getEmail(),
+                    title,
+                    message,
+                    "http://localhost:5173/resources?resourceId=" + entityId            );
+        }
+    }
+
+    private enum EmailType {
+        RESOURCE,
+        LIVRABLE
     }
 }

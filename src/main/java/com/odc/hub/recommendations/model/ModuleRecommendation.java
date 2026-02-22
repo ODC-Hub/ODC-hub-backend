@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document(collection = "module_recommendations_v1")
+@Document(collection = "module_recommendations")
 @Data
 public class ModuleRecommendation {
 

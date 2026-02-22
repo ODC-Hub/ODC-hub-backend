@@ -36,7 +36,7 @@ public class AuthService {
     private final EmailService emailService;
 
     private final AuditService auditService;
-
+    private final UserRegistrationNotificationService userRegistrationNotificationService;
 
     private static final int MAX_ATTEMPTS = 5;
     private static final int ATTEMPT_WINDOW_MINUTES = 1;
@@ -66,6 +66,8 @@ public class AuthService {
         user.setUpdatedAt(Instant.now());
 
         userRepository.save(user);
+
+        userRegistrationNotificationService.notifyAdmins(user);
     }
 
     public void activateAccount(String token) {
