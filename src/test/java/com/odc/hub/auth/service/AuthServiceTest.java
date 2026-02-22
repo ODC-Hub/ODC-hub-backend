@@ -7,20 +7,22 @@ import com.odc.hub.user.model.AccountStatus;
 import com.odc.hub.user.model.Role;
 import com.odc.hub.user.model.User;
 import com.odc.hub.user.repository.UserRepository;
-import com.odc.hub.auth.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-        import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock
@@ -32,6 +34,15 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private AuditService auditService;
+
+    @Mock
+    private UserRegistrationNotificationService userRegistrationNotificationService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -39,8 +50,6 @@ class AuthServiceTest {
 
     @BeforeEach
     void setup() {
-        MockitoAnnotations.openMocks(this);
-
         activeUser = new User();
         activeUser.setId("123");
         activeUser.setEmail("user@test.com");
@@ -51,49 +60,58 @@ class AuthServiceTest {
 
     @Test
     void loginShouldFailWhenUserNotFound() {
-        when(userRepository.findByEmail("x@test.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("x@test.com"))
+                .thenReturn(Optional.empty());
 
         LoginRequest request = new LoginRequest();
         request.setEmail("x@test.com");
         request.setPassword("pwd");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> authService.login(request, mock(HttpServletResponse.class)));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> authService.login(request, mock(HttpServletResponse.class))
+        );
 
         assertEquals("Invalid credentials", ex.getMessage());
-
     }
-
 
     @Test
     void loginShouldFailWhenPasswordIsWrong() {
-        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("bad", "hashed")).thenReturn(false);
+        when(userRepository.findByEmail("user@test.com"))
+                .thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches("bad", "hashed"))
+                .thenReturn(false);
 
         LoginRequest request = new LoginRequest();
         request.setEmail("user@test.com");
         request.setPassword("bad");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> authService.login(request, mock(HttpServletResponse.class)));
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> authService.login(request, mock(HttpServletResponse.class))
+        );
 
-        assertTrue(ex.getMessage().contains("Invalid email or password"));
-
+        assertEquals(401, ex.getStatusCode().value());
+        assertTrue(ex.getReason().contains("Invalid email or password"));
     }
 
     @Test
     void loginShouldFailWhenAccountIsPending() {
         activeUser.setStatus(AccountStatus.PENDING);
 
-        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("pwd", "hashed")).thenReturn(true);
+        when(userRepository.findByEmail("user@test.com"))
+                .thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches("pwd", "hashed"))
+                .thenReturn(true);
 
         LoginRequest request = new LoginRequest();
         request.setEmail("user@test.com");
         request.setPassword("pwd");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> authService.login(request, null));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> authService.login(request, null)
+        );
 
         assertEquals("Account not active", ex.getMessage());
     }
@@ -102,25 +120,33 @@ class AuthServiceTest {
     void loginShouldFailWhenAccountIsDisabled() {
         activeUser.setStatus(AccountStatus.DISABLED);
 
-        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("pwd", "hashed")).thenReturn(true);
+        when(userRepository.findByEmail("user@test.com"))
+                .thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches("pwd", "hashed"))
+                .thenReturn(true);
 
         LoginRequest request = new LoginRequest();
         request.setEmail("user@test.com");
         request.setPassword("pwd");
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> authService.login(request, null));
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> authService.login(request, null)
+        );
 
         assertEquals("Account not active", ex.getMessage());
     }
 
     @Test
     void loginShouldSucceedForActiveUser() {
-        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(activeUser));
-        when(passwordEncoder.matches("pwd", "hashed")).thenReturn(true);
-        when(jwtService.generateAccessToken(activeUser)).thenReturn("access");
-        when(jwtService.generateRefreshToken(activeUser)).thenReturn("refresh");
+        when(userRepository.findByEmail("user@test.com"))
+                .thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches("pwd", "hashed"))
+                .thenReturn(true);
+        when(jwtService.generateAccessToken(activeUser))
+                .thenReturn("access");
+        when(jwtService.generateRefreshToken(activeUser))
+                .thenReturn("refresh");
 
         LoginRequest request = new LoginRequest();
         request.setEmail("user@test.com");
@@ -130,42 +156,32 @@ class AuthServiceTest {
 
         verify(jwtService).generateAccessToken(activeUser);
         verify(jwtService).generateRefreshToken(activeUser);
+        verify(userRepository).save(activeUser); // resetFailedLogins()
     }
 
     @Test
-    void loginShouldCreateCookies() {
-        UserRepository repo = Mockito.mock(UserRepository.class);
-        com.odc.hub.auth.service.JwtService jwtService = new com.odc.hub.auth.service.JwtService(
-                "super-secret-key-super-secret-key-super-secret-key",
-                60000,
-                3600000
-        );
-
-        User user = new User();
-        user.setId("1");
-        user.setEmail("test@test.com");
-        user.setRole(Role.ADMIN);
-        user.setStatus(AccountStatus.ACTIVE);
-        user.setPassword(new BCryptPasswordEncoder().encode("1234"));
-
-        Mockito.when(repo.findByEmail("test@test.com"))
-                .thenReturn(Optional.of(user));
-
-        AuthService authService = new AuthService(
-                repo,
-                new BCryptPasswordEncoder(),
-                jwtService,
-                Mockito.mock(EmailService.class),
-                Mockito.mock(AuditService.class)
-        );
+    void loginShouldCreateCookiesWhenHttpResponseExists() {
+        when(userRepository.findByEmail("user@test.com"))
+                .thenReturn(Optional.of(activeUser));
+        when(passwordEncoder.matches("pwd", "hashed"))
+                .thenReturn(true);
+        when(jwtService.generateAccessToken(activeUser))
+                .thenReturn("access");
+        when(jwtService.generateRefreshToken(activeUser))
+                .thenReturn("refresh");
+        when(jwtService.getAccessExpiration())
+                .thenReturn(60000L);
+        when(jwtService.getRefreshExpiration())
+                .thenReturn(3600000L);
 
         LoginRequest request = new LoginRequest();
-        request.setEmail("test@test.com");
-        request.setPassword("1234");
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
+        request.setEmail("user@test.com");
+        request.setPassword("pwd");
+
+        HttpServletResponse response = mock(HttpServletResponse.class);
 
         authService.login(request, response);
 
-        verify(response, Mockito.atLeastOnce()).addCookie(Mockito.any());
+        verify(response, atLeast(2)).addCookie(any());
     }
 }
