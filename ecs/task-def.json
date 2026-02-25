@@ -9,16 +9,22 @@
     {
       "name": "odc-hub-backend",
       "image": "<IMAGE_URI>",
+      "essential": true,
       "portMappings": [
         {
           "containerPort": 8080,
           "protocol": "tcp"
         }
       ],
-      "essential": true,
-      "environment": [
-        { "name": "JWT_SECRET", "value": "${JWT_SECRET}" },
-        { "name": "MONGO_URI", "value": "${MONGO_URI}" }
+      "secrets": [
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:eu-west-3:741448926181:secret:odc-hub/JWT_SECRET-b2LhrQ"
+        },
+        {
+          "name": "MONGO_URI",
+          "valueFrom": "arn:aws:secretsmanager:eu-west-3:741448926181:secret:odc-hub/MONGO_URI-WSv70D"
+        }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",

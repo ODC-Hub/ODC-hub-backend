@@ -11,7 +11,7 @@ env:
   ECR_REPOSITORY: odc-hub-backend
   ECS_CLUSTER: odc-hub-cluster
   ECS_SERVICE: odc-hub-backend-task-service-kixiw51r
-  CONTAINER_NAME: odc-hub-backend-container
+  CONTAINER_NAME: odc-hub-backend
 
 jobs:
   build-test-sonar:
